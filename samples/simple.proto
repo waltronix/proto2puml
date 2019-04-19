@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+message SubMessage {
+ string Contact = 5;
+ oneof Kind {
+  int32 x = 100; 
+  double x2 = 101;
+ }
+}
+
+message MyMessage {
+ string Name = 2;
+ int32 Version = 6;
+ SubMessage sub = 8;
+}
+

@@ -1,3 +1,24 @@
+# general
+samples/*.dot
+samples/*.png
+samples/*.puml
+proto2puml
+public/**
+
+# cmake
+CMakeFiles/**
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*ninja*
+
+# IDE stuff
+.vs/**
+.vscode/**
+out/**
+*.pdb
+*.ilk
+
 # Prerequisites
 *.d
 

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en-us">
+
+<head>
+  <meta charset="utf-8">
+  <title>proto2puml</title>
+</head>
+
+<body>
+  <script async src="proto2puml.js"></script>
+  <script type="module" src="plantuml-encoder.min.js"></script>
+  <script>
+    $ = function (id) { return document.getElementById(id) };
+
+    var convertProtoToPuml = function () {
+      var proto_to_puml = Module.cwrap('proto_to_puml', 'string', ['string']);
+
+      try {
+        puml = proto_to_puml($('protoField').value);
+        $('pumlField').value = puml;
+      } catch (error) {
+        $('pumlField').value = error;
+      }
+    }
+
+    function renderPuml() {
+      s = plantumlEncoder.encode($('pumlField').value);
+      $('im').src = $('puml_server').value + "/svg/" + s;
+    }
+
+    var update = function () {
+      $('puml_server').value = "http://www.plantuml.com/plantuml"
+
+      convertProtoToPuml();
+      renderPuml();
+    };
+
+    var Module = { onRuntimeInitialized: update }
+  </script>
+  <table>
+    <tr>
+      <th>
+        <div>
+          <p>proto definition:</p>
+          <textarea id="protoField" cols="50" rows="10">
+syntax = "proto3";
+
+message SubMessage {
+  string Contact = 5;
+  oneof Kind {
+    int32 x = 100; 
+    double x2 = 101;
+  }
+}
+
+message MyMessage {
+  string Name = 2;
+  int32 Version = 6;
+  map<int32, SubMessage> sub = 8;
+}
+    </textarea>
+          <br />
+          <button type=submit onclick="convertProtoToPuml();">convert to puml</button>
+        </div>
+      </th>
+      <th>
+        <div>
+          <p>puml definition:</p>
+          <textarea id="pumlField" cols="50" rows="10"></textarea>
+          <br />
+          <button type=submit onclick="renderPuml();">render puml</button>
+        </div>
+      </th>
+    </tr>
+    <tr>
+      <th>
+          PlantUml server: <br/>
+          <input id="puml_server" type="text"></input>
+      </th>
+    </tr>
+    <tr>
+      <td colspan="2" align="center">
+        <div>
+          <img id="im" />
+        </div>
+      </td>
+    </tr>
+  </table>
+</body>
+
+</html>

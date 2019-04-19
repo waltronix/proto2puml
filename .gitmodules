@@ -1,0 +1,10 @@
+[submodule "3rdParty/PEGTL"]
+	path = 3rdParty/PEGTL
+	url = https://github.com/taocpp/PEGTL.git
+	branch = master
+[submodule "3rdParty/plantuml-encoder"]
+	path = 3rdParty/plantuml-encoder
+	url = https://github.com/markushedvall/plantuml-encoder.git
+[submodule "3rdParty/googletest"]
+	path = 3rdParty/googletest
+	url = https://github.com/google/googletest.git
