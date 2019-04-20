@@ -4,10 +4,11 @@
 #define TAO_PEGTL_PRETTY_DEMANGLE 1
 
 #include "proto3_grammar.hpp"
+#include "parse_tree_to_dot.hpp"
 
 #include <tao/pegtl/analyze.hpp>
 #include <tao/pegtl/contrib/parse_tree.hpp>
-#include <tao/pegtl/contrib/parse_tree_to_dot.hpp>
+// #include <tao/pegtl/contrib/parse_tree_to_dot.hpp>
 
 namespace TAO_PEGTL_NAMESPACE::proto3 {
 // clang-format off
@@ -16,12 +17,19 @@ template< typename Rule >
       Rule,
       parse_tree::store_content::on<
          message,
-         field,
+
          oneof,
+         oneof_name,
          oneof_field,
+
+         key_type,
+         map_name,
          map_field,
+
+         field,
          builtin_type,
-         defined_type
+         defined_type,
+         field_name
      > >;
 
 // clang-format on
