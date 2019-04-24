@@ -13,23 +13,27 @@
 namespace TAO_PEGTL_NAMESPACE::proto3 {
 // clang-format off
 template< typename Rule >
-   using selector = parse_tree::selector<
-      Rule,
-      parse_tree::store_content::on<
-         message,
+  using selector = parse_tree::selector<
+    Rule,
+    parse_tree::store_content::on<
+      ident,
 
-         oneof,
-         oneof_name,
-         oneof_field,
+      message,
 
-         key_type,
-         map_name,
-         map_field,
+      oneof,
+      oneof_name,
+      oneof_field,
 
-         field,
-         builtin_type,
-         defined_type,
-         field_name
+      key_type,
+      map_name,
+      map_field,
+
+      field,
+      field_number,
+      field_name,
+
+      builtin_type,
+      defined_type
      > >;
 
 // clang-format on
@@ -46,7 +50,7 @@ int main(int argc, char **argv) {
   for (int i = 1; i < argc; ++i) {
     file_input in(argv[i]);
     auto root = tao::pegtl::parse_tree::parse<proto3::proto, proto3::selector>(in);
-    parse_tree::print_dot(std::cout, *root);
+    proto3::print_dot(std::cout, *root);
   }
   return 0;
 }
