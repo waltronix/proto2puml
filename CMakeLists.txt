@@ -20,6 +20,7 @@ ExternalProject_Add(PEGTL
 include_directories(${PEGTL_DOWNLOAD_LOCATION}/include)
 
 add_executable(proto2puml src/main.cpp)
+add_dependencies(proto2puml PEGTL)
 
 set(SAMPLE_FILE ${CMAKE_CURRENT_LIST_DIR}/samples/simple)
 
