@@ -4,53 +4,56 @@
 #define TAO_PEGTL_PRETTY_DEMANGLE 1
 
 #include "proto3_grammar.hpp"
-#include "parse_tree_to_dot.hpp"
+#include "parse_tree_to_puml.hpp"
 
 #include <tao/pegtl/analyze.hpp>
 #include <tao/pegtl/contrib/parse_tree.hpp>
 // #include <tao/pegtl/contrib/parse_tree_to_dot.hpp>
 
-namespace TAO_PEGTL_NAMESPACE::proto3 {
+namespace
+TAO_PEGTL_NAMESPACE::proto3
+{
 // clang-format off
-template< typename Rule >
-  using selector = parse_tree::selector<
+template <typename Rule>
+using selector = parse_tree::selector<
     Rule,
     parse_tree::store_content::on<
-      ident,
+        ident,
 
-      message,
+        message,
 
-      oneof,
-      oneof_name,
-      oneof_field,
+        oneof,
+        oneof_name,
+        oneof_field,
 
-      key_type,
-      map_name,
-      map_field,
+        key_type,
+        map_name,
+        map_field,
 
-      field,
-      field_number,
-      field_name,
+        field,
+        field_number,
+        field_name,
 
-      builtin_type,
-      defined_type
-     > >;
+        type,
+        builtin_type,
+        defined_type
+    >>;
 
 // clang-format on
-
 } // namespace TAO_PEGTL_NAMESPACE::proto3
 
-int main(int argc, char **argv) {
-  using namespace TAO_PEGTL_NAMESPACE; // NOLINT
+int main(int argc, char** argv)
+{
+    using namespace TAO_PEGTL_NAMESPACE; // NOLINT
 
-  if (analyze<proto3::proto>() != 0) {
-    return 1;
-  }
+    if (analyze<proto3::proto>() != 0) {
+        return 1;
+    }
 
-  for (int i = 1; i < argc; ++i) {
-    file_input in(argv[i]);
-    auto root = tao::pegtl::parse_tree::parse<proto3::proto, proto3::selector>(in);
-    proto3::print_dot(std::cout, *root);
-  }
-  return 0;
+    for (int i = 1; i < argc; ++i) {
+        file_input in(argv[i]);
+        auto root = tao::pegtl::parse_tree::parse<proto3::proto, proto3::selector>(in);
+        proto3::print_dot(std::cout, *root);
+    }
+    return 0;
 }
