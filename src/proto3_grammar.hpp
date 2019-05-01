@@ -79,7 +79,9 @@ namespace TAO_PEGTL_NAMESPACE::proto3
    struct field_options : if_must< one< '[' >, sps, list< field_option, comma, sp >, sps, one< ']' > > {};
    struct field_name : ident {};
    struct field_number : int_lit {};
-   struct field : seq< opt< string< 'r', 'e', 'p', 'e', 'a', 't', 'e', 'd' >, sps >, type, sps, field_name, sps, equ, sps, field_number, sps, opt< field_options, sps >, semi > {};
+   struct field : seq< type, sps, field_name, sps, equ, sps, field_number, sps, opt< field_options, sps >, semi > {};
+
+   struct repeated : seq< opt< string< 'r', 'e', 'p', 'e', 'a', 't', 'e', 'd' >, sps >, field > {};
 
    struct oneof_name : ident {};
    struct oneof_field : if_must< type, sps, field_name, sps, equ, sps, field_number, sps, opt< field_options, sps >, semi > {};
@@ -101,7 +103,7 @@ namespace TAO_PEGTL_NAMESPACE::proto3
    struct enum_body : if_must< one< '{' >, sps, star< sor< option, enum_field, semi >, sps >, one< '}' > > {};
    struct enum_ : if_must< string< 'e', 'n', 'u', 'm' >, sps, enum_name, sps, enum_body > {};
 
-   struct message_thing : sor< field, enum_, message, option, oneof, map_field, reserved, semi > {};
+   struct message_thing : sor< field, repeated, enum_, message, option, oneof, map_field, reserved, semi > {};
    struct message : if_must< string< 'm', 'e', 's', 's', 'a', 'g', 'e' >, sps, ident, sps, one< '{' >, sps, star< message_thing, sps >, one< '}' >, sps > {};
 
    struct package : if_must< string< 'p', 'a', 'c', 'k', 'a', 'g', 'e' >, sps, full_ident, sps, semi, sps > {};
