@@ -1,3 +1,5 @@
+// Parts are taken from from parse_tree_to_dot.hpp:
+//
 // Copyright (c) 2019 Dr. Colin Hirsch and Daniel Frey
 // Please see LICENSE for license or visit https://github.com/taocpp/PEGTL/
 
@@ -16,15 +18,17 @@ TAO_PEGTL_NAMESPACE::proto3
 {
 namespace internal
 {
-void print_dot_node(std::ostream& os, const parse_tree::node& n, const std::string& s);
+void print_puml_node(std::ostream& os, const parse_tree::node& n, const std::string& s);
+
+void print_message(std::ostream& os, const parse_tree::node& n, const std::string& s);
 
 template <typename TItem>
 bool has_child(const parse_tree::node& n)
 {
     auto& found_items = std::find_if(n.children.begin(), n.children.end(),
         [](auto& child) {
-        return child->is<TItem>();
-    });
+            return child->is<TItem>();
+        });
 
     return found_items != n.children.end();
 }
@@ -63,11 +67,25 @@ void print_message_thing(std::ostream& os, const parse_tree::node& n, const std:
             auto& type = get_single_child<proto3::type>(n);
             type_id = type.string_view();
 
-            if(has_child<defined_type>(type)) {
-                dependency = s + " *-- " + type_id + "\n";
+            if (has_child<defined_type>(type)) {
+                dependency = s + " o-- " + type_id + "\n";
             }
         }
-    }catch (std::exception& e) {
+        else if (n.is<repeated>()) {
+            auto& f = get_single_child<field>(n);
+            name = get_single_child<field_name>(f).string_view();
+
+            auto& type = get_single_child<proto3::type>(f);
+            type_id = type.string_view();
+
+            if (has_child<defined_type>(type)) {
+                dependency = s + " \"1\" *-- \"0 .. n\" " + type_id + "\n";
+            }
+        }
+        else {
+            print_puml_node(os, n, n.name());
+        }
+    } catch (std::exception& e) {
         os << e.what() << std::endl;
     }
 
@@ -78,12 +96,12 @@ void print_message(std::ostream& os, const parse_tree::node& n, const std::strin
 {
     std::string dependencies = "";
 
-    std::string name = std::string( get_single_child<ident>(n).string_view());
-    os << "class " << name << " {" << std::endl; // " [ label=\"message: '" << s << "'\\n" << std::endl;
+    std::string name = std::string(get_single_child<ident>(n).string_view());
+    os << "class " << name << " {" << std::endl;
 
     auto& fields = std::find_if(n.children.begin(), n.children.end(),
         [](auto& child) {
-            return child->is<field>();
+            return child->is<field>() | child->is<repeated>();
         });
 
     while (fields != n.children.end()) {
@@ -93,7 +111,7 @@ void print_message(std::ostream& os, const parse_tree::node& n, const std::strin
 
         fields = std::find_if(++fields, n.children.end(),
             [](auto& child) {
-                return child->is<field>();
+                return child->is<field>() | child->is<repeated>();
             });
     }
 
@@ -102,33 +120,27 @@ void print_message(std::ostream& os, const parse_tree::node& n, const std::strin
     os << dependencies << std::endl;
 }
 
-void print_dot_node(std::ostream& os, const parse_tree::node& n, const std::string& s)
+void print_puml_node(std::ostream& os, const parse_tree::node& n, const std::string& s)
 {
     if (n.has_content()) {
-        if (n.is<field>()) {
-            print_field_node(os, n, s);
-            return;
-        }
         if (n.is<message>()) {
             print_message(os, n, s);
             return;
-        } else {
-            os << "  x" << &n << " [ label=\"" << s << "\\n\\\"" << n.string_view() << "\\\"\" ]\n";
         }
     }
     if (!n.children.empty()) {
         for (auto& up : n.children) {
-            print_dot_node(os, *up, up->name());
+            print_puml_node(os, *up, up->name());
         }
     }
 }
 }  // namespace internal
 
-void print_dot(std::ostream& os, const parse_tree::node& n)
+void print_puml(std::ostream& os, const parse_tree::node& n)
 {
     assert( n.is_root() );
     os << "@startuml" << std::endl;
-    internal::print_dot_node(os, n, "");
+    internal::print_puml_node(os, n, "");
     os << "@enduml" << std::endl;
 }
 }
