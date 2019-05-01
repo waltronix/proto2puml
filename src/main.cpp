@@ -8,7 +8,10 @@
 
 #include <tao/pegtl/analyze.hpp>
 #include <tao/pegtl/contrib/parse_tree.hpp>
-// #include <tao/pegtl/contrib/parse_tree_to_dot.hpp>
+#include <tao/pegtl/contrib/parse_tree_to_dot.hpp>
+
+#include <filesystem>
+#include <fstream>
 
 namespace
 TAO_PEGTL_NAMESPACE::proto3
@@ -34,6 +37,8 @@ using selector = parse_tree::selector<
         field_number,
         field_name,
 
+        repeated,
+
         type,
         builtin_type,
         defined_type
@@ -51,9 +56,35 @@ int main(int argc, char** argv)
     }
 
     for (int i = 1; i < argc; ++i) {
-        file_input in(argv[i]);
-        auto root = tao::pegtl::parse_tree::parse<proto3::proto, proto3::selector>(in);
-        proto3::print_dot(std::cout, *root);
+        std::filesystem::path proto_file = argv[i];
+
+        if (exists(proto_file)) {
+            file_input in(argv[i]);
+
+            try {
+                auto root = tao::pegtl::parse_tree::parse<proto3::proto, proto3::selector>(in);
+
+                {
+                    auto dot_file = proto_file.replace_extension("dot");
+                    std::ofstream dot_stream(dot_file);
+                    dot_stream << "@startuml" << std::endl;
+                    parse_tree::print_dot(dot_stream, *root);
+                    dot_stream << "@enduml" << std::endl;
+                }
+
+                 {
+                     auto puml_file = proto_file.replace_extension("puml");
+                     std::ofstream puml_stream(puml_file);
+                     proto3::print_puml(puml_stream, *root);
+                 }
+            }
+            catch(std::exception& e) {
+                std::cerr << e.what()<< std::endl;
+            }
+        }
+        else{
+            std::cerr << "File '" << proto_file << "' does not exist" << std::endl;
+        }
     }
     return 0;
 }
