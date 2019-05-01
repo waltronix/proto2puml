@@ -2,6 +2,7 @@
 3rdParty/**
 samples/*.dot
 samples/*.png
+samples/*.puml
 proto2puml
 
 # cmake
@@ -9,6 +10,13 @@ CMakeFiles/**
 CMakeCache.txt
 cmake_install.cmake
 Makefile
+*ninja*
+
+# IDE stuff
+.vs/**
+.vscode/**
+*.pdb
+*.ilk
 
 # Prerequisites
 *.d
