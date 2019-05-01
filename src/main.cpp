@@ -24,6 +24,7 @@ using selector = parse_tree::selector<
         ident,
 
         message,
+        message_thing,
 
         oneof,
         oneof_name,
@@ -41,8 +42,13 @@ using selector = parse_tree::selector<
 
         type,
         builtin_type,
-        defined_type
-    >>;
+        defined_type,
+
+        enum_,
+        enum_name,
+        enum_field,
+        int_lit
+>>;
 
 // clang-format on
 } // namespace TAO_PEGTL_NAMESPACE::proto3

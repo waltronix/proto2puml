@@ -6,6 +6,7 @@
 #pragma once
 
 #include <cassert>
+#include <functional>
 #include <ostream>
 #include <string>
 
@@ -48,11 +49,20 @@ const parse_tree::node& get_single_child(const parse_tree::node& n)
     throw std::exception("item not found");
 }
 
-void print_field_node(std::ostream& os, const parse_tree::node& n, const std::string& s)
+template <typename TItem>
+void for_every_child_do(const parse_tree::node& n, std::function<void(const parse_tree::node& n)> f)
 {
-    auto name = get_single_child<field_name>(n).string_view();
+    auto predicate = [](const parse_tree::node& child) {return child.is<TItem>();};
 
-    os << " - " << name << std::endl;
+    auto& child = std::find_if(n.children.begin(), n.children.end(), 
+        [](const auto& child) {return child->is<TItem>(); });
+
+    while (child != n.children.end()) {
+        f(*child->get());
+
+        child = std::find_if(++child, n.children.end(), 
+            [](const auto& child) {return child->is<TItem>(); });
+    }
 }
 
 void print_message_thing(std::ostream& os, const parse_tree::node& n, const std::string& s, std::string& dependency)
@@ -99,25 +109,29 @@ void print_message(std::ostream& os, const parse_tree::node& n, const std::strin
     std::string name = std::string(get_single_child<ident>(n).string_view());
     os << "class " << name << " {" << std::endl;
 
-    auto& fields = std::find_if(n.children.begin(), n.children.end(),
-        [](auto& child) {
-            return child->is<field>() | child->is<repeated>();
-        });
-
-    while (fields != n.children.end()) {
+    for_every_child_do<message_thing>(n, [&](const auto& child) 
+    {
         std::string dependency;
-        print_message_thing(os, *fields->get(), name, dependency);
+        print_message_thing(os, *(child.children.begin()->get()), name, dependency);
         dependencies += dependency;
-
-        fields = std::find_if(++fields, n.children.end(),
-            [](auto& child) {
-                return child->is<field>() | child->is<repeated>();
-            });
-    }
+    });
 
     os << "}" << std::endl;
 
     os << dependencies << std::endl;
+}
+
+void print_enum(std::ostream& os, const parse_tree::node& n, const std::string& s)
+{
+    std::string name = std::string(get_single_child<enum_name>(n).string_view());
+    os << "enum " << name << " {" << std::endl;
+
+    for_every_child_do<enum_field>(n, [&](const auto& child) {
+        os << "  " << get_single_child<ident>(child).string_view() << " = " 
+            << get_single_child<int_lit>(child).string_view() << std::endl;
+    });
+
+    os << "}" << std::endl;
 }
 
 void print_puml_node(std::ostream& os, const parse_tree::node& n, const std::string& s)
@@ -125,6 +139,10 @@ void print_puml_node(std::ostream& os, const parse_tree::node& n, const std::str
     if (n.has_content()) {
         if (n.is<message>()) {
             print_message(os, n, s);
+            return;
+        }
+        if (n.is<enum_>()) {
+            print_enum(os, n, s);
             return;
         }
     }
