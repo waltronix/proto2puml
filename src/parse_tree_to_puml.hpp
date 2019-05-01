@@ -75,6 +75,8 @@ class puml_printer
             auto& type = get_single_child<proto3::type>(n);
             type_id = type.string_view();
 
+            definitions << "  " << name << ": " << type_id << std::endl;
+
             if (has_child<defined_type>(type)) {
                 dependencies << "  " << message << " o-- " << type_id << std::endl;
             }
@@ -86,21 +88,34 @@ class puml_printer
             auto& type = get_single_child<proto3::type>(f);
             type_id = type.string_view();
 
+            definitions << "  " << name << ": " << type_id << "[]" << std::endl;
+
             if (has_child<defined_type>(type)) {
-                dependencies << "  " << message << " \"1\" *-- \"0 .. n\" " << type_id << std::endl;
+                dependencies << "  " << message << " \"1\" *-- \"0 .. n\" " << type.string_view() << std::endl;
             }
+        }
+        else if (n.is<oneof>()) {
+            name = get_single_child<oneof_name>(n).string_view();
+
+            definitions << "  " << name << ": union<";
+
+            for_every_child_do<oneof_field>(n, [&](const auto& child) {
+                definitions << get_single_child<type>(child).string_view() << ", ";
+            });
+            definitions.seekp(-2, std::ios_base::end);
+
+            definitions << ">" << std::endl;
         }
         else {
             print(n);
         }
 
-        definitions << "  " << name << ": " << type_id << std::endl;
     }
 
     void print_message(const parse_tree::node& n)
     {
         std::string name = std::string(get_single_child<ident>(n).string_view());
-        definitions << "class " << name << " {" << std::endl;
+        definitions << "class " << name << " <<(M,LightGreen)>>  {" << std::endl;
 
         for_every_child_do<message_thing>(n, [&](const auto& child)
         {

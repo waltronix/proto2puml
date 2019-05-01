@@ -24,7 +24,15 @@ message Person {
   google.protobuf.Timestamp last_updated = 5;
 }
 
+message test {
+  oneof XYZ {
+    int32 X = 1;
+    float Y = 2;
+  }
+}
+
 message AddressBook {
   string adb = 1;
-  repeated Person people = 2;
+  repeated Person peoples = 2;
+  repeated test test_data = 3;
 }
