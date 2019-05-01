@@ -17,60 +17,58 @@
 namespace
 TAO_PEGTL_NAMESPACE::proto3
 {
-namespace internal
+class puml_printer
 {
-void print_puml_node(std::ostream& os, const parse_tree::node& n, const std::string& s);
+    std::stringstream definitions;
+    std::stringstream dependencies;
 
-void print_message(std::ostream& os, const parse_tree::node& n, const std::string& s);
-
-template <typename TItem>
-bool has_child(const parse_tree::node& n)
-{
-    auto& found_items = std::find_if(n.children.begin(), n.children.end(),
-        [](auto& child) {
+    template <typename TItem>
+    bool has_child(const parse_tree::node& n)
+    {
+        auto& found_items = std::find_if(n.children.begin(), n.children.end(),
+            [](auto& child) {
             return child->is<TItem>();
         });
 
-    return found_items != n.children.end();
-}
-
-template <typename TItem>
-const parse_tree::node& get_single_child(const parse_tree::node& n)
-{
-    auto& found_items = std::find_if(n.children.begin(), n.children.end(),
-        [](auto& child) {
-            return child->is<TItem>();
-        });
-
-    if (found_items != n.children.end()) {
-        return *(found_items->get());
+        return found_items != n.children.end();
     }
 
-    throw std::exception("item not found");
-}
+    template <typename TItem>
+    const parse_tree::node& get_single_child(const parse_tree::node& n)
+    {
+        auto& found_items = std::find_if(n.children.begin(), n.children.end(),
+            [](auto& child) {
+            return child->is<TItem>();
+        });
 
-template <typename TItem>
-void for_every_child_do(const parse_tree::node& n, std::function<void(const parse_tree::node& n)> f)
-{
-    auto predicate = [](const parse_tree::node& child) {return child.is<TItem>();};
+        if (found_items != n.children.end()) {
+            return *(found_items->get());
+        }
 
-    auto& child = std::find_if(n.children.begin(), n.children.end(), 
-        [](const auto& child) {return child->is<TItem>(); });
+        throw std::exception("item not found");
+    }
 
-    while (child != n.children.end()) {
-        f(*child->get());
+    template <typename TItem>
+    void for_every_child_do(const parse_tree::node& n, std::function<void(const parse_tree::node& n)> f)
+    {
+        auto predicate = [](const parse_tree::node& child) {return child.is<TItem>(); };
 
-        child = std::find_if(++child, n.children.end(), 
+        auto& child = std::find_if(n.children.begin(), n.children.end(),
             [](const auto& child) {return child->is<TItem>(); });
+
+        while (child != n.children.end()) {
+            f(*child->get());
+
+            child = std::find_if(++child, n.children.end(),
+                [](const auto& child) {return child->is<TItem>(); });
+        }
     }
-}
 
-void print_message_thing(std::ostream& os, const parse_tree::node& n, const std::string& s, std::string& dependency)
-{
-    std::string name = "undefined name";
-    std::string type_id = "undefined type";
+    void print_message_thing(const parse_tree::node& n, const std::string& message)
+    {
+        std::string name = "undefined name";
+        std::string type_id = "undefined type";
 
-    try {
         if (n.is<field>()) {
             name = get_single_child<field_name>(n).string_view();
 
@@ -78,7 +76,7 @@ void print_message_thing(std::ostream& os, const parse_tree::node& n, const std:
             type_id = type.string_view();
 
             if (has_child<defined_type>(type)) {
-                dependency = s + " o-- " + type_id + "\n";
+                dependencies << "  " << message << " o-- " << type_id << std::endl;
             }
         }
         else if (n.is<repeated>()) {
@@ -89,76 +87,92 @@ void print_message_thing(std::ostream& os, const parse_tree::node& n, const std:
             type_id = type.string_view();
 
             if (has_child<defined_type>(type)) {
-                dependency = s + " \"1\" *-- \"0 .. n\" " + type_id + "\n";
+                dependencies << "  " << message << " \"1\" *-- \"0 .. n\" " << type_id << std::endl;
             }
         }
         else {
-            print_puml_node(os, n, n.name());
+            print(n);
         }
-    } catch (std::exception& e) {
-        os << e.what() << std::endl;
+
+        definitions << "  " << name << ": " << type_id << std::endl;
     }
 
-    os << "  " << name << ": " << type_id << std::endl;
-}
-
-void print_message(std::ostream& os, const parse_tree::node& n, const std::string& s)
-{
-    std::string dependencies = "";
-
-    std::string name = std::string(get_single_child<ident>(n).string_view());
-    os << "class " << name << " {" << std::endl;
-
-    for_every_child_do<message_thing>(n, [&](const auto& child) 
+    void print_message(const parse_tree::node& n)
     {
-        std::string dependency;
-        print_message_thing(os, *(child.children.begin()->get()), name, dependency);
-        dependencies += dependency;
-    });
+        std::string name = std::string(get_single_child<ident>(n).string_view());
+        definitions << "class " << name << " {" << std::endl;
 
-    os << "}" << std::endl;
+        for_every_child_do<message_thing>(n, [&](const auto& child)
+        {
+            print_message_thing(*(child.children.begin()->get()), name);
+        });
 
-    os << dependencies << std::endl;
-}
+        definitions << "}" << std::endl;
+    }
 
-void print_enum(std::ostream& os, const parse_tree::node& n, const std::string& s)
-{
-    std::string name = std::string(get_single_child<enum_name>(n).string_view());
-    os << "enum " << name << " {" << std::endl;
+    void print_enum(const parse_tree::node& n)
+    {
+        std::string name = std::string(get_single_child<enum_name>(n).string_view());
+        definitions << "enum " << name << " {" << std::endl;
 
-    for_every_child_do<enum_field>(n, [&](const auto& child) {
-        os << "  " << get_single_child<ident>(child).string_view() << " = " 
-            << get_single_child<int_lit>(child).string_view() << std::endl;
-    });
+        for_every_child_do<enum_field>(n, [&](const auto& child) {
+            definitions << "  " << get_single_child<ident>(child).string_view() << " = "
+                << get_single_child<int_lit>(child).string_view() << std::endl;
+        });
 
-    os << "}" << std::endl;
-}
+        definitions << "}" << std::endl;
+    }
 
-void print_puml_node(std::ostream& os, const parse_tree::node& n, const std::string& s)
-{
-    if (n.has_content()) {
-        if (n.is<message>()) {
-            print_message(os, n, s);
-            return;
+    void print(const parse_tree::node& n)
+    {
+        if (n.has_content()) {
+            if (n.is<message>()) {
+                print_message(n);
+                return;
+            }
+            if (n.is<enum_>()) {
+                print_enum(n);
+                return;
+            }
         }
-        if (n.is<enum_>()) {
-            print_enum(os, n, s);
-            return;
+        if (!n.children.empty()) {
+            for (auto& up : n.children) {
+                print(*up);
+            }
         }
     }
-    if (!n.children.empty()) {
-        for (auto& up : n.children) {
-            print_puml_node(os, *up, up->name());
-        }
+
+    std::string get_puml()
+    {
+        std::stringstream puml;
+        puml << "@startuml" << std::endl;
+        puml << definitions.str() << std::endl;;
+        puml << dependencies.str() << std::endl;;
+        puml << "@enduml" << std::endl;
+        return puml.str();
     }
-}
-}  // namespace internal
+
+public:
+    static std::string run(const parse_tree::node& root_node)
+    {
+        assert(root_node.is_root());
+
+        puml_printer pp;
+        pp.print(root_node);
+        return pp.get_puml();
+    }
+};
 
 void print_puml(std::ostream& os, const parse_tree::node& n)
 {
-    assert( n.is_root() );
-    os << "@startuml" << std::endl;
-    internal::print_puml_node(os, n, "");
-    os << "@enduml" << std::endl;
+    try {
+        os << puml_printer::run(n);
+    }
+    catch (std::exception& e) {
+        os << e.what() << std::endl;
+    }
+    catch(...) {
+        os << "Something terrible happened." << std::endl;
+    }
 }
 }
