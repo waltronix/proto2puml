@@ -12,7 +12,8 @@ namespace TAO_PEGTL_NAMESPACE::proto3
    // clang-format off
 
    struct comment : seq< two< '/' >, until< eolf > > {};
-   struct sp : sor< space, comment > {};
+   struct block_comment : seq< string< '/', '*'>, until< string< '*', '/'> > > {};
+   struct sp : sor< space, comment, block_comment > {};
    struct sps : star< sp > {};
 
    struct comma : one< ',' > {};
