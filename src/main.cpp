@@ -70,13 +70,13 @@ int main(int argc, char** argv)
             try {
                 auto root = tao::pegtl::parse_tree::parse<proto3::proto, proto3::selector>(in);
 
-                {
-                    auto dot_file = proto_file.replace_extension("dot");
-                    std::ofstream dot_stream(dot_file);
-                    dot_stream << "@startuml" << std::endl;
-                    parse_tree::print_dot(dot_stream, *root);
-                    dot_stream << "@enduml" << std::endl;
-                }
+                //{
+                //    auto dot_file = proto_file.replace_extension("dot");
+                //    std::ofstream dot_stream(dot_file);
+                //    dot_stream << "@startuml" << std::endl;
+                //    parse_tree::print_dot(dot_stream, *root);
+                //    dot_stream << "@enduml" << std::endl;
+                //}
 
                  {
                      auto puml_file = proto_file.replace_extension("puml");
