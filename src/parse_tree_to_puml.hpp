@@ -25,9 +25,9 @@ class puml_printer
     template <typename TItem>
     bool has_child(const parse_tree::node& n)
     {
-        auto& found_items = std::find_if(n.children.begin(), n.children.end(),
+        const auto& found_items = std::find_if(n.children.begin(), n.children.end(),
             [](auto& child) {
-            return child->is<TItem>();
+            return child->template is<TItem>();
         });
 
         return found_items != n.children.end();
@@ -36,16 +36,16 @@ class puml_printer
     template <typename TItem>
     const parse_tree::node& get_single_child(const parse_tree::node& n)
     {
-        auto& found_items = std::find_if(n.children.begin(), n.children.end(),
+        const auto& found_items = std::find_if(n.children.begin(), n.children.end(),
             [](auto& child) {
-            return child->is<TItem>();
+            return child->template is<TItem>();
         });
 
         if (found_items != n.children.end()) {
             return *(found_items->get());
         }
 
-        throw std::exception("item not found");
+        throw "item not found"; //std::exception(std::string("item not found"));
     }
 
     template <typename TItem>
@@ -53,14 +53,14 @@ class puml_printer
     {
         auto predicate = [](const parse_tree::node& child) {return child.is<TItem>(); };
 
-        auto& child = std::find_if(n.children.begin(), n.children.end(),
-            [](const auto& child) {return child->is<TItem>(); });
+        auto child = std::find_if(n.children.begin(), n.children.end(),
+            [](const auto& child) {return child->template is<TItem>(); });
 
         while (child != n.children.end()) {
             f(*child->get());
-
+            
             child = std::find_if(++child, n.children.end(),
-                [](const auto& child) {return child->is<TItem>(); });
+                [](const auto& child) {return child->template is<TItem>(); });
         }
     }
 
@@ -99,9 +99,11 @@ class puml_printer
 
             definitions << "  " << name << ": union<";
 
-            for_every_child_do<oneof_field>(n, [&](const auto& child) {
-                definitions << get_single_child<type>(child).string_view() << ", ";
-            });
+            for_every_child_do<oneof_field>(n, 
+                [&](const auto& child)
+                {
+                    definitions << get_single_child<type>(child).string_view() << ", ";
+                });
             definitions.seekp(-2, std::ios_base::end);
 
             definitions << ">" << std::endl;

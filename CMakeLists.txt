@@ -17,10 +17,17 @@ ExternalProject_Add(PEGTL
     INSTALL_COMMAND ""
 )
 
-include_directories(${PEGTL_DOWNLOAD_LOCATION}/include)
+add_subdirectory(${PEGTL_DOWNLOAD_LOCATION})
+
+#include_directories(${PEGTL_DOWNLOAD_LOCATION}/include)
+
+add_executable(testit src/test.cpp)
+
+
 
 add_executable(proto2puml src/main.cpp)
-#add_dependencies(proto2puml PEGTL)
+target_link_libraries(proto2puml PRIVATE taocpp::pegtl)
+target_link_libraries(proto2puml PRIVATE stdc++fs)
 
 set(SAMPLE_FILE ${CMAKE_CURRENT_LIST_DIR}/samples/adressbook)
 

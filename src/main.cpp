@@ -10,8 +10,10 @@
 #include <tao/pegtl/contrib/parse_tree.hpp>
 #include <tao/pegtl/contrib/parse_tree_to_dot.hpp>
 
-#include <filesystem>
+#include <experimental/filesystem>
 #include <fstream>
+
+namespace filesystem = std::experimental::filesystem;
 
 namespace
 TAO_PEGTL_NAMESPACE::proto3
@@ -62,7 +64,7 @@ int main(int argc, char** argv)
     }
 
     for (int i = 1; i < argc; ++i) {
-        std::filesystem::path proto_file = argv[i];
+        filesystem::path proto_file = argv[i];
 
         if (exists(proto_file)) {
             file_input in(argv[i]);
