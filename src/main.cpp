@@ -12,6 +12,8 @@
 
 #include <experimental/filesystem>
 #include <fstream>
+#include <string>
+#include <streambuf>
 
 namespace filesystem = std::experimental::filesystem;
 
@@ -67,7 +69,13 @@ int main(int argc, char** argv)
         filesystem::path proto_file = argv[i];
 
         if (exists(proto_file)) {
-            file_input in(argv[i]);
+            // file_input in(argv[i]);
+
+            std::ifstream proto_stream(argv[i]);
+            std::string proto_string((std::istreambuf_iterator<char>(proto_stream)),
+                std::istreambuf_iterator<char>());
+
+            memory_input in(proto_string, "");
 
             try {
                 auto root = tao::pegtl::parse_tree::parse<proto3::proto, proto3::selector>(in);
