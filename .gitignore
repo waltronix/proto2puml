@@ -1,5 +1,4 @@
 # general
-3rdParty/**
 samples/*.dot
 samples/*.png
 samples/*.puml
