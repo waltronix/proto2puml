@@ -9,25 +9,26 @@ set(PEGTL_DOWNLOAD_LOCATION ${CMAKE_CURRENT_LIST_DIR}/3rdParty/PEGTL)
 
 ExternalProject_Add(PEGTL
     GIT_REPOSITORY https://github.com/taocpp/PEGTL
-    #GIT_TAG "origin/2.8.0"
+    GIT_TAG master
+#    GIT_TAG 2.8.0
     PREFIX "3rdParty"
     SOURCE_DIR ${PEGTL_DOWNLOAD_LOCATION}
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
-)
+    LOG_DOWNLOAD ON
+ )
 
-add_subdirectory(${PEGTL_DOWNLOAD_LOCATION})
+#add_subdirectory(${PEGTL_DOWNLOAD_LOCATION})
 
-#include_directories(${PEGTL_DOWNLOAD_LOCATION}/include)
+include_directories(${PEGTL_DOWNLOAD_LOCATION}/include)
 
-add_executable(testit src/test.cpp)
-
+#add_executable(testit src/test.cpp)
 
 
 add_executable(proto2puml src/main.cpp)
-target_link_libraries(proto2puml PRIVATE taocpp::pegtl)
-target_link_libraries(proto2puml PRIVATE stdc++fs)
+#target_link_libraries(proto2puml PRIVATE taocpp::pegtl)
+#target_link_libraries(proto2puml PRIVATE stdc++fs)
 
 set(SAMPLE_FILE ${CMAKE_CURRENT_LIST_DIR}/samples/adressbook)
 
